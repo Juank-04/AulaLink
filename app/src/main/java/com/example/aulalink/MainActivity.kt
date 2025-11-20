@@ -12,13 +12,40 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.aulalink.ui.theme.AulaLinkTheme
-import com.example.aulalink.views.LoginView
+import com.example.aulalink.views.AuthScreen
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.aulalink.views.HomeScreen
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            LoginView()}
+            val navController = rememberNavController()
+
+            NavHost(
+                navController = navController,
+                startDestination = "auth"
+            ) {
+                composable(route = "auth") {
+                    AuthScreen(
+                        onAuthSuccess = {
+                            navController.navigate(route = "home") {
+                                popUpTo(route = "auth") { inclusive = true }
+                            }
+                        }
+                    )
+                }
+
+                composable(route = "home") {
+                    HomeScreen() // o Text("Home") si aún no la tienes
+                }
+            }
+        }
+    }
 }
-}
+
