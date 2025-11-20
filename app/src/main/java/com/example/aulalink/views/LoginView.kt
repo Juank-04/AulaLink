@@ -13,10 +13,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun LoginView(
-    onLoginSuccess: () -> Unit = {},
+    onLoginSuccess: (UserProfile) -> Unit = {},
     onSwitchToRegister: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -24,6 +25,9 @@ fun LoginView(
     var password by remember { mutableStateOf("") }
     var errorMsg by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+
+    val auth = remember { FirebaseAuth.getInstance() }
+    val db = remember { FirebaseFirestore.getInstance() }
 
     Box(
         modifier = modifier
@@ -50,7 +54,6 @@ fun LoginView(
                 modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
             )
 
-            // Texto visible
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -90,18 +93,40 @@ fun LoginView(
                 )
             )
 
-            // Botón para ingresar a la app
             Button(
                 onClick = {
                     isLoading = true
                     errorMsg = null
-                    FirebaseAuth.getInstance()
-                        .signInWithEmailAndPassword(email.trim(), password)
+
+                    auth.signInWithEmailAndPassword(email.trim(), password)
                         .addOnCompleteListener { task ->
-                            isLoading = false
                             if (task.isSuccessful) {
-                                onLoginSuccess()
+                                val uid = auth.currentUser?.uid
+                                if (uid != null) {
+                                    db.collection("users")
+                                        .document(uid)
+                                        .get()
+                                        .addOnSuccessListener { doc ->
+                                            isLoading = false
+                                            val user = doc.toObject(UserProfile::class.java)
+                                            if (user != null) {
+                                                onLoginSuccess(user)
+                                            } else {
+                                                errorMsg =
+                                                    "No se encontraron tus datos en la base de datos."
+                                            }
+                                        }
+                                        .addOnFailureListener { e ->
+                                            isLoading = false
+                                            errorMsg = e.localizedMessage
+                                                ?: "No se pudieron cargar tus datos."
+                                        }
+                                } else {
+                                    isLoading = false
+                                    errorMsg = "No se pudo obtener el usuario."
+                                }
                             } else {
+                                isLoading = false
                                 val e = task.exception
                                 errorMsg = when (e) {
                                     is FirebaseAuthException -> when (e.errorCode) {
@@ -143,7 +168,6 @@ fun LoginView(
                 }
             }
 
-            // Botón para ir a crear cuenta
             TextButton(
                 onClick = onSwitchToRegister,
                 modifier = Modifier.padding(top = 12.dp)
@@ -154,7 +178,6 @@ fun LoginView(
                 )
             }
 
-            // Mensaje de error
             errorMsg?.let { msg ->
                 Text(
                     text = msg,

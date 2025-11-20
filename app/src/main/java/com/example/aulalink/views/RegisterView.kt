@@ -12,12 +12,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 
 @Composable
 fun RegisterView(
-    onRegisterSuccess: () -> Unit = {},
+    onRegisterSuccess: (UserProfile) -> Unit = {},
     onSwitchToLogin: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -27,11 +28,11 @@ fun RegisterView(
     var errorMsg by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
-    // 3. Rol que luego usarás como variable de decisión
-    var role by remember { mutableStateOf("estudiante") } // "tutor" o "estudiante"
+    // Rol que luego usarás para restringir vistas
+    var role by remember { mutableStateOf("estudiante") }
 
-    val auth = FirebaseAuth.getInstance()
-    val db = FirebaseFirestore.getInstance()
+    val auth = remember { FirebaseAuth.getInstance() }
+    val db = remember { FirebaseFirestore.getInstance() }
 
     Box(
         modifier = modifier
@@ -58,7 +59,6 @@ fun RegisterView(
                 modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
             )
 
-            // 1. Texto visible en todos los campos
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
@@ -117,7 +117,6 @@ fun RegisterView(
                 )
             )
 
-            // 3. Opción Tutor / Estudiante (variable de decisión futura)
             Text(
                 text = "Tipo de usuario",
                 color = Color.White,
@@ -158,7 +157,6 @@ fun RegisterView(
                 }
             }
 
-            // 2. Botón para crear la cuenta (ingresar a la app)
             Button(
                 onClick = {
                     isLoading = true
@@ -172,7 +170,7 @@ fun RegisterView(
                                     val userData = hashMapOf(
                                         "nombre" to nombre,
                                         "email" to email.trim(),
-                                        "role" to role          // se guarda el tipo de usuario
+                                        "role" to role
                                     )
 
                                     db.collection("users")
@@ -180,32 +178,43 @@ fun RegisterView(
                                         .set(userData)
                                         .addOnSuccessListener {
                                             isLoading = false
-                                            onRegisterSuccess()
+                                            onRegisterSuccess(
+                                                UserProfile(
+                                                    nombre = nombre,
+                                                    email = email.trim(),
+                                                    role = role
+                                                )
+                                            )
                                         }
                                         .addOnFailureListener { e ->
                                             isLoading = false
-                                            errorMsg = e.localizedMessage
+                                            errorMsg = when (e) {
+                                                is FirebaseFirestoreException ->
+                                                    "No se pudo guardar el usuario en la base de datos."
+                                                else ->
+                                                    "Ocurrió un error al guardar los datos."
+                                            }
                                         }
                                 } else {
                                     isLoading = false
-                                    val e = task.exception
-                                    errorMsg = when (e) {
-                                        is FirebaseAuthException -> when (e.errorCode) {
-                                            "ERROR_EMAIL_ALREADY_IN_USE" ->
-                                                "Este correo ya está registrado."
-                                            "ERROR_INVALID_EMAIL" ->
-                                                "El correo no es válido."
-                                            "ERROR_WEAK_PASSWORD" ->
-                                                "La contraseña es demasiado débil."
-                                            else ->
-                                                "No se pudo crear la cuenta. Inténtalo de nuevo."
-                                        }
-                                        else -> "Ocurrió un error inesperado."
-                                    }
+                                    errorMsg = "No se pudo obtener el usuario."
                                 }
                             } else {
                                 isLoading = false
-                                errorMsg = task.exception?.localizedMessage
+                                val e = task.exception
+                                errorMsg = when (e) {
+                                    is FirebaseAuthException -> when (e.errorCode) {
+                                        "ERROR_EMAIL_ALREADY_IN_USE" ->
+                                            "Este correo ya está registrado."
+                                        "ERROR_INVALID_EMAIL" ->
+                                            "El correo no es válido."
+                                        "ERROR_WEAK_PASSWORD" ->
+                                            "La contraseña es demasiado débil."
+                                        else ->
+                                            "No se pudo crear la cuenta. Inténtalo de nuevo."
+                                    }
+                                    else -> "Ocurrió un error inesperado."
+                                }
                             }
                         }
                 },
@@ -233,7 +242,6 @@ fun RegisterView(
                 }
             }
 
-            // 2. Botón para ir a la pantalla de iniciar sesión
             TextButton(
                 onClick = onSwitchToLogin,
                 modifier = Modifier.padding(top = 12.dp)
@@ -244,7 +252,6 @@ fun RegisterView(
                 )
             }
 
-            // Mensaje de error
             errorMsg?.let { msg ->
                 Text(
                     text = msg,
