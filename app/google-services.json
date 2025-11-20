@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "350656491958",
+    "project_id": "aulalink-64c3b",
+    "storage_bucket": "aulalink-64c3b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:350656491958:android:4e5b55471f4bff0a201117",
+        "android_client_info": {
+          "package_name": "com.example.aulalink"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAh3-rEZEDCygMSR3lh0UzX3j9HeCHkpyE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
