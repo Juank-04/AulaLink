@@ -3,49 +3,18 @@ package com.example.aulalink
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.aulalink.ui.theme.AulaLinkTheme
-import com.example.aulalink.views.AuthScreen
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.aulalink.views.HomeScreen
-
+import com.example.aulalink.navigation.AppNavHost
+import com.example.aulalink.ui.theme.AulaLinkTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            val navController = rememberNavController()
-
-            NavHost(
-                navController = navController,
-                startDestination = "auth"
-            ) {
-                composable(route = "auth") {
-                    AuthScreen(
-                        onAuthSuccess = {
-                            navController.navigate(route = "home") {
-                                popUpTo(route = "auth") { inclusive = true }
-                            }
-                        }
-                    )
-                }
-
-                composable(route = "home") {
-                    HomeScreen() // o Text("Home") si aún no la tienes
-                }
+            AulaLinkTheme {
+                val navController = rememberNavController()
+                AppNavHost(navController)
             }
         }
     }
 }
-

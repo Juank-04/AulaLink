@@ -58,10 +58,17 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.8.3")
 
-    // Firebase sin KTX
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
     implementation("com.google.firebase:firebase-auth:24.0.1")
     implementation("com.google.firebase:firebase-firestore:26.0.2")
+    implementation("androidx.activity:activity-compose:1.7.2")
+    implementation("com.google.firebase:firebase-storage:22.0.1")
+
+
+
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
